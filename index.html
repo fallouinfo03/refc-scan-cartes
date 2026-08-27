@@ -141,6 +141,7 @@
     padding:20px;
     position:relative;
     overflow:hidden;
+    cursor:pointer;user-select:none;-webkit-user-select:none;
   }
   .capture-box img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
   .capture-box .cap-icon{font-size:34px;}
@@ -159,6 +160,7 @@
     border:none;border-radius:12px;padding:15px;
     font-size:15.5px;font-weight:700;
     display:flex;align-items:center;justify-content:center;gap:8px;
+    cursor:pointer;user-select:none;-webkit-user-select:none;
   }
   .btn-primary{background:var(--bleu-nuit);color:#fff;}
   .btn-secondary{background:var(--bleu-clair);color:var(--bleu);}
@@ -312,30 +314,30 @@
       </div>
 
       <div id="captureRectoWrap">
-        <div class="capture-box" id="boxRecto">
+        <label class="capture-box" id="boxRecto" for="inputRecto">
           <div class="cap-icon">📷</div>
           <div class="cap-label">Photo du recto</div>
           <div class="cap-sub">Sert d'archive — cadrez la carte bien à plat</div>
-        </div>
+        </label>
         <input type="file" accept="image/*" capture="environment" id="inputRecto">
       </div>
 
       <div id="captureVersoWrap" style="display:none;">
-        <div class="capture-box" id="boxVerso">
+        <label class="capture-box" id="boxVerso" for="inputVerso">
           <div class="cap-icon">📷</div>
           <div class="cap-label">Photo du verso</div>
           <div class="cap-sub">Uniquement si le verso contient de l'information utile</div>
-        </div>
+        </label>
         <input type="file" accept="image/*" capture="environment" id="inputVerso">
       </div>
 
       <div class="btn-row" id="rectoActions">
-        <button class="btn btn-primary" id="btnTakeRecto" style="flex:1;">Prendre la photo (recto)</button>
+        <label class="btn btn-primary" for="inputRecto" style="flex:1;">Prendre la photo (recto)</label>
       </div>
 
       <div id="versoActions" style="display:none;">
         <div class="btn-row">
-          <button class="btn btn-primary" id="btnTakeVerso" style="flex:1;">Prendre la photo (verso)</button>
+          <label class="btn btn-primary" for="inputVerso" style="flex:1;">Prendre la photo (verso)</label>
         </div>
         <div class="skip-link" id="btnSkipVerso">Ce recto suffit — pas de verso utile →</div>
       </div>
