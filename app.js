@@ -378,10 +378,12 @@
       showScreen("screen-home");
     };
 
-    $("btnTakeRecto").onclick = () => $("inputRecto").click();
-    $("btnTakeVerso").onclick = () => $("inputVerso").click();
-    $("boxRecto").onclick = () => $("inputRecto").click();
-    $("boxVerso").onclick = () => $("inputVerso").click();
+    // Les zones de capture et les boutons "Prendre la photo" sont maintenant
+    // des <label for="..."> HTML natifs, associés directement aux <input
+    // type="file">. Ce comportement est géré nativement par le navigateur
+    // (essentiel sur Safari iOS, qui bloque parfois l'ouverture de la
+    // caméra quand elle est déclenchée via JavaScript plutôt que par un
+    // vrai clic direct de l'utilisateur sur l'élément associé à l'input).
 
     $("inputRecto").onchange = (e) => {
       if (e.target.files && e.target.files[0]) handleRectoSelected(e.target.files[0]);
