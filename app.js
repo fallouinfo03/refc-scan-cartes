@@ -217,8 +217,60 @@
   // ------------------------------------------------------------------
   // OCR via Tesseract.js
   // ------------------------------------------------------------------
+  // ------------------------------------------------------------------
+  // Pré-traitement d'image : améliore nettement la fiabilité de l'OCR
+  // sur des photos prises à main levée (éclairage variable, légère
+  // inclinaison). On limite la taille (Tesseract est plus fiable sur des
+  // images ni trop grandes ni trop petites) et on augmente le contraste.
+  // ------------------------------------------------------------------
+  function preprocessImage(dataUrl) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX_DIM = 1600;
+        let { width, height } = img;
+        if (width > MAX_DIM || height > MAX_DIM) {
+          const scale = MAX_DIM / Math.max(width, height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Contraste + niveaux de gris légers : aide Tesseract à mieux
+        // séparer le texte du fond, surtout sur fond coloré ou texturé.
+        const imgData = ctx.getImageData(0, 0, width, height);
+        const d = imgData.data;
+        const contrast = 1.15;
+        const intercept = 128 * (1 - contrast);
+        for (let i = 0; i < d.length; i += 4) {
+          const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+          const adjusted = gray * contrast + intercept;
+          const clamped = Math.max(0, Math.min(255, adjusted));
+          d[i] = d[i + 1] = d[i + 2] = clamped;
+        }
+        ctx.putImageData(imgData, 0, 0);
+
+        resolve(canvas.toDataURL("image/jpeg", 0.92));
+      };
+      img.onerror = () => resolve(dataUrl); // en cas d'échec, on garde l'original
+      img.src = dataUrl;
+    });
+  }
+
   async function runOCR(dataUrl, onProgress) {
-    const result = await Tesseract.recognize(dataUrl, "fra+eng+chi_sim", {
+    const processed = await preprocessImage(dataUrl);
+    // On utilise uniquement fra+eng par défaut : Tesseract perd en fiabilité
+    // quand plusieurs jeux de caractères très différents (latin + chinois)
+    // sont chargés simultanément, même sur une carte 100% en français.
+    // Le résultat se dégrade globalement plutôt que de juste "ignorer" le
+    // chinois. On garde donc fra+eng comme réglage principal, fiable pour
+    // la grande majorité des cartes reçues par le REFC.
+    const result = await Tesseract.recognize(processed, "fra+eng", {
       logger: (m) => {
         if (m.status === "recognizing text" && onProgress) {
           onProgress(Math.round(m.progress * 100));
