@@ -276,14 +276,14 @@
     <section class="screen active" id="screen-home">
       <div class="hero-card">
         <h2>Bonjour 👋</h2>
-        <p>Scannez une carte de visite reçue en salon ou congrès — l'info est extraite automatiquement, vous la vérifiez, et elle s'ajoute au fichier central du REFC.</p>
+        <p>Ajoutez un contact reçu en salon ou congrès — remplissez quelques champs et il s'ajoute directement au fichier central du REFC.</p>
       </div>
 
       <button class="big-btn" id="btnNewCard">
         <span class="emoji">📇</span>
         <span>
-          Nouvelle carte
-          <small>Recto, puis verso si nécessaire</small>
+          Nouveau contact
+          <small>Nom, organisation, coordonnées</small>
         </span>
       </button>
 
@@ -306,59 +306,8 @@
       <div id="recentList"></div>
     </section>
 
-    <!-- ===================== CAPTURE ===================== -->
-    <section class="screen" id="screen-capture">
-      <div class="step-indicator">
-        <div class="step-dot active" id="dot1"></div>
-        <div class="step-dot" id="dot2"></div>
-      </div>
-
-      <div id="captureRectoWrap">
-        <label class="capture-box" id="boxRecto" for="inputRecto">
-          <div class="cap-icon">📷</div>
-          <div class="cap-label">Photo du recto</div>
-          <div class="cap-sub">Sert d'archive — cadrez la carte bien à plat</div>
-        </label>
-        <input type="file" accept="image/*" capture="environment" id="inputRecto">
-      </div>
-
-      <div id="captureVersoWrap" style="display:none;">
-        <label class="capture-box" id="boxVerso" for="inputVerso">
-          <div class="cap-icon">📷</div>
-          <div class="cap-label">Photo du verso</div>
-          <div class="cap-sub">Uniquement si le verso contient de l'information utile</div>
-        </label>
-        <input type="file" accept="image/*" capture="environment" id="inputVerso">
-      </div>
-
-      <div class="btn-row" id="rectoActions">
-        <label class="btn btn-primary" for="inputRecto" style="flex:1;">Prendre la photo (recto)</label>
-      </div>
-
-      <div id="versoActions" style="display:none;">
-        <div class="btn-row">
-          <label class="btn btn-primary" for="inputVerso" style="flex:1;">Prendre la photo (verso)</label>
-        </div>
-        <div class="skip-link" id="btnSkipVerso">Ce recto suffit — pas de verso utile →</div>
-      </div>
-
-      <button class="btn btn-ghost" id="btnCancelCapture">Annuler</button>
-    </section>
-
-    <!-- ===================== PROCESSING ===================== -->
-    <section class="screen" id="screen-processing">
-      <div class="processing">
-        <div class="spinner"></div>
-        <h3 id="procTitle">Lecture de la carte…</h3>
-        <p id="procSub">Ça prend quelques secondes</p>
-        <div class="progress-track"><div class="progress-fill" id="procBar"></div></div>
-      </div>
-    </section>
-
-    <!-- ===================== REVIEW ===================== -->
+    <!-- ===================== REVIEW / SAISIE ===================== -->
     <section class="screen" id="screen-review">
-      <div class="thumbs-row" id="thumbsRow"></div>
-
       <div class="field">
         <label>Nom de la personne</label>
         <input type="text" id="fNom" placeholder="(optionnel — parfois absent de la carte)">
