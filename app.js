@@ -1,17 +1,15 @@
 /* =========================================================================
    REFC — Cartes de visite
-   Logique principale : capture photo (archive), saisie manuelle des champs,
-   détection automatique du pays à partir de l'indicatif téléphonique,
-   envoi vers Google Sheets (ou stockage local si non configuré).
+   Logique principale : saisie manuelle rapide des champs, détection
+   automatique du pays à partir de l'indicatif téléphonique, envoi vers
+   Google Sheets (ou stockage local si non configuré).
 
-   Note : une première version utilisait la reconnaissance de texte (OCR)
-   automatique pour pré-remplir les champs. Sur des cartes de visite réelles
-   (polices stylisées, mises en page non linéaires, faible contraste),
-   la fiabilité s'est avérée trop faible pour être utile — corriger un texte
-   mal lu prenait plus de temps que de le taper directement. On garde donc
-   la photo comme archive/preuve visuelle, et la saisie se fait à la main,
-   avec la seule automatisation fiable à ce stade : déduire le pays depuis
-   l'indicatif du numéro de téléphone.
+   Note : les versions précédentes incluaient une prise de photo (d'abord
+   avec lecture automatique du texte / OCR, puis comme simple archive).
+   L'OCR s'est avéré peu fiable sur des cartes de visite réelles, et une
+   fois retiré, la photo ne servait plus à rien de concret puisqu'elle
+   n'est pas envoyée au Google Sheet. On est donc passé à une saisie
+   directe : plus rapide, plus simple, sans étape superflue.
    ========================================================================= */
 
 (function () {
@@ -21,8 +19,6 @@
   // État
   // ------------------------------------------------------------------
   const state = {
-    rectoDataUrl: null,
-    versoDataUrl: null,
     selectedContexte: ""
   };
 
@@ -47,15 +43,6 @@
     b.classList.add("show");
     clearTimeout(showBanner._t);
     showBanner._t = setTimeout(() => b.classList.remove("show"), 3200);
-  }
-
-  function fileToDataUrl(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
   }
 
   function escapeHtml(str) {
@@ -133,7 +120,7 @@
     const recentWrap = $("recentList");
     recentWrap.innerHTML = "";
     if (list.length === 0) {
-      recentWrap.innerHTML = '<div class="empty-note">Aucune carte ajoutée pour l\'instant.<br>Appuyez sur « Nouvelle carte » pour commencer.</div>';
+      recentWrap.innerHTML = '<div class="empty-note">Aucun contact ajouté pour l\'instant.<br>Appuyez sur « Nouveau contact » pour commencer.</div>';
       return;
     }
     list.slice(0, 5).forEach((e) => {
@@ -155,7 +142,7 @@
     const wrap = $("fullHistoryList");
     wrap.innerHTML = "";
     if (list.length === 0) {
-      wrap.innerHTML = '<div class="empty-note">Aucune carte enregistrée.</div>';
+      wrap.innerHTML = '<div class="empty-note">Aucun contact enregistré.</div>';
       return;
     }
     list.forEach((e) => {
@@ -195,69 +182,17 @@
   }
 
   // ------------------------------------------------------------------
-  // Flux de capture + saisie
+  // Flux de saisie
   // ------------------------------------------------------------------
-  function resetCaptureState() {
-    state.rectoDataUrl = null;
-    state.versoDataUrl = null;
-
-    $("boxRecto").classList.remove("filled");
-    $("boxRecto").innerHTML = `
-      <div class="cap-icon">📷</div>
-      <div class="cap-label">Photo du recto</div>
-      <div class="cap-sub">Sert d'archive — cadrez la carte bien à plat</div>
-    `;
-    $("boxVerso").classList.remove("filled");
-    $("boxVerso").innerHTML = `
-      <div class="cap-icon">📷</div>
-      <div class="cap-label">Photo du verso</div>
-      <div class="cap-sub">Uniquement si le verso contient de l'information utile</div>
-    `;
-    $("captureVersoWrap").style.display = "none";
-    $("versoActions").style.display = "none";
-    $("rectoActions").style.display = "flex";
-    $("dot1").classList.add("active");
-    $("dot2").classList.remove("active");
-    $("inputRecto").value = "";
-    $("inputVerso").value = "";
-  }
-
-  function startNewCard() {
-    resetCaptureState();
-    showScreen("screen-capture");
-  }
-
-  async function handleRectoSelected(file) {
-    state.rectoDataUrl = await fileToDataUrl(file);
-    $("boxRecto").classList.add("filled");
-    $("boxRecto").innerHTML = `<img src="${state.rectoDataUrl}" alt="Recto"><div class="retake">Reprendre</div>`;
-    $("rectoActions").style.display = "none";
-    $("captureVersoWrap").style.display = "block";
-    $("versoActions").style.display = "block";
-    $("dot1").classList.add("active");
-    $("dot2").classList.add("active");
-  }
-
-  async function handleVersoSelected(file) {
-    state.versoDataUrl = await fileToDataUrl(file);
-    $("boxVerso").classList.add("filled");
-    $("boxVerso").innerHTML = `<img src="${state.versoDataUrl}" alt="Verso"><div class="retake">Reprendre</div>`;
-    goToReview();
-  }
-
-  function skipVerso() {
-    goToReview();
-  }
-
-  function goToReview() {
+  function startNewContact() {
     populateReviewForm();
     showScreen("screen-review");
   }
 
   function populateReviewForm() {
-    // Champs vides — saisie manuelle. Le contexte reprend celui de la
-    // dernière carte de la session (pratique quand on scanne plusieurs
-    // cartes reçues au même événement d'affilée).
+    // Champs vides à chaque nouveau contact, sauf le contexte qui reprend
+    // celui du dernier ajout de la session (pratique quand on saisit
+    // plusieurs contacts reçus au même événement d'affilée).
     $("fNom").value = "";
     $("fOrg").value = "";
     $("fTel").value = "";
@@ -266,15 +201,6 @@
     $("fSiteWeb").value = "";
     $("fNotes").value = "";
     $("fContexte").value = state.selectedContexte || "";
-
-    const thumbsRow = $("thumbsRow");
-    thumbsRow.innerHTML = "";
-    if (state.rectoDataUrl) {
-      thumbsRow.innerHTML += `<div class="thumb"><span class="tag">Recto</span><img src="${state.rectoDataUrl}"></div>`;
-    }
-    if (state.versoDataUrl) {
-      thumbsRow.innerHTML += `<div class="thumb"><span class="tag">Verso</span><img src="${state.versoDataUrl}"></div>`;
-    }
 
     // Chips de contexte
     const chipRow = $("chipRow");
@@ -308,7 +234,7 @@
   async function confirmEntry() {
     const org = $("fOrg").value.trim();
     if (!org) {
-      showBanner("L'organisation est requise avant d'ajouter la carte.", true);
+      showBanner("L'organisation est requise avant d'ajouter le contact.", true);
       $("fOrg").focus();
       return;
     }
@@ -363,36 +289,14 @@
   function wireEvents() {
     $("headerTitle").textContent = CONFIG.APP_TITLE || "Cartes de visite";
 
-    $("btnNewCard").onclick = startNewCard;
-    $("btnAddAnother").onclick = startNewCard;
+    $("btnNewCard").onclick = startNewContact;
+    $("btnAddAnother").onclick = startNewContact;
     $("btnBackHome").onclick = () => {
       renderHome();
       showScreen("screen-home");
     };
-    $("btnCancelCapture").onclick = () => {
-      resetCaptureState();
-      showScreen("screen-home");
-    };
-    $("btnDiscard").onclick = () => {
-      resetCaptureState();
-      showScreen("screen-home");
-    };
+    $("btnDiscard").onclick = () => showScreen("screen-home");
 
-    // Les zones de capture et les boutons "Prendre la photo" sont maintenant
-    // des <label for="..."> HTML natifs, associés directement aux <input
-    // type="file">. Ce comportement est géré nativement par le navigateur
-    // (essentiel sur Safari iOS, qui bloque parfois l'ouverture de la
-    // caméra quand elle est déclenchée via JavaScript plutôt que par un
-    // vrai clic direct de l'utilisateur sur l'élément associé à l'input).
-
-    $("inputRecto").onchange = (e) => {
-      if (e.target.files && e.target.files[0]) handleRectoSelected(e.target.files[0]);
-    };
-    $("inputVerso").onchange = (e) => {
-      if (e.target.files && e.target.files[0]) handleVersoSelected(e.target.files[0]);
-    };
-
-    $("btnSkipVerso").onclick = skipVerso;
     $("btnConfirm").onclick = confirmEntry;
     $("fTel").addEventListener("input", handlePhoneInput);
     $("fTel").addEventListener("blur", handlePhoneInput);
